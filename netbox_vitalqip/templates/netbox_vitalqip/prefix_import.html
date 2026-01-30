@@ -1,0 +1,85 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+
+{% block title %}Import Prefixes from VitalQIP{% endblock %}
+
+{% block header %}
+<h1 class="ps-3 pt-2"><i class="mdi mdi-import"></i> Import Prefixes from VitalQIP</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-ip-network"></i> Search VitalQIP Networks
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Search VitalQIP for networks to import as prefixes, or look up a single IP address.
+                </p>
+
+                <form method="get" action="{% url 'plugins:netbox_vitalqip:prefix_import_preview' %}">
+                    <div class="mb-3">
+                        <label for="pattern" class="form-label">Search Pattern or IP Address</label>
+                        <input type="text" name="pattern" id="pattern" class="form-control form-control-lg"
+                               placeholder="e.g., 10.* or 192.168.1.1" required>
+                        <div class="form-text">
+                            <strong>Wildcard patterns</strong> search for networks/prefixes:
+                            <code>10.*</code>, <code>172.16.*</code>, <code>192.168.1.*</code><br>
+                            <strong>Full IP addresses</strong> look up a single address with DNS name:
+                            <code>192.168.1.1</code>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="mdi mdi-magnify"></i> Search VitalQIP
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-information"></i> How It Works
+                </h5>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li class="mb-2">Enter an address pattern (e.g., <code>10.*</code> or <code>192.168.1.*</code>)</li>
+                    <li class="mb-2">Plugin queries VitalQIP for matching networks</li>
+                    <li class="mb-2">Review networks and select which to import</li>
+                    <li class="mb-2">Imported prefixes are created in NetBox with:
+                        <ul>
+                            <li>Description from QIP network name</li>
+                            <li>OHSU tenant</li>
+                            <li>Status: Container (for large) or Active (for small)</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-alert"></i> Notes
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0 text-muted small">
+                    <li class="mb-2">Broader patterns (e.g., <code>10.*</code>) return more results</li>
+                    <li class="mb-2">Networks already in NetBox will be marked as "Exists"</li>
+                    <li class="mb-2">VitalQIP responses are cached for 5 minutes</li>
+                    <li class="mb-2">Networks marked "DISCONNECTED" are shown but can be skipped</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

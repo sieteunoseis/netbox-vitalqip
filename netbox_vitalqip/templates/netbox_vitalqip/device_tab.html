@@ -1,0 +1,106 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% if error %}
+        <!-- Configuration Error -->
+        <div class="alert alert-warning">
+            <i class="mdi mdi-alert"></i> {{ error }}
+        </div>
+
+        {% elif no_ips %}
+        <!-- No IPs assigned -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-ip-network"></i> VitalQIP IPAM
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-0">
+                    <i class="mdi mdi-information-outline"></i>
+                    {{ message }}
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- VitalQIP Data -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="mdi mdi-ip-network"></i> VitalQIP IPAM
+                </h5>
+                <span class="badge text-bg-primary">{{ found_count }}/{{ total_count }} IPs found</span>
+            </div>
+            <div class="card-body">
+                {% if qip_addresses %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Object Name</th>
+                                <th>Domain</th>
+                                <th>Object Class</th>
+                                <th>Subnet</th>
+                                <th>Config Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for addr in qip_addresses %}
+                            <tr>
+                                <td>
+                                    <code>{{ addr.netbox_ip }}</code>
+                                    {% if addr.cached %}
+                                    <i class="mdi mdi-cached text-muted" title="Cached data"></i>
+                                    {% endif %}
+                                </td>
+                                <td>{{ addr.qip_data.objectName|default:"-" }}</td>
+                                <td>{{ addr.qip_data.domainName|default:"-" }}</td>
+                                <td>{{ addr.qip_data.objectClass|default:"-" }}</td>
+                                <td>
+                                    {% if addr.qip_data.subnetAddr %}
+                                    <code>{{ addr.qip_data.subnetAddr }}</code>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if addr.qip_data.dynamicConfig == "Static" %}
+                                    <span class="badge text-bg-success">Static</span>
+                                    {% elif addr.qip_data.dynamicConfig == "DHCP" %}
+                                    <span class="badge text-bg-info">DHCP</span>
+                                    {% elif addr.qip_data.dynamicConfig %}
+                                    <span class="badge text-bg-secondary">{{ addr.qip_data.dynamicConfig }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="mdi mdi-alert"></i>
+                    None of the {{ total_count }} IP address(es) assigned to this {% if is_vm %}VM{% else %}device{% endif %} were found in VitalQIP.
+                </div>
+                {% endif %}
+
+                {% if truncated %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="mdi mdi-information"></i>
+                    Showing first 5 of {{ total_count }} IPs. Additional IPs not queried to improve load time.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
