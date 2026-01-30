@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netbox-vitalqip"
-version = "0.1.0"
+version = "0.1.1"
 description = "NetBox plugin to display VitalQIP IPAM data and import IP addresses"
 readme = "README.md"
 license = {text = "Apache-2.0"}

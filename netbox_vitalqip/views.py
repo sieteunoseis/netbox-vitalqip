@@ -86,6 +86,7 @@ class DeviceVitalQIPView(generic.ObjectView):
         device = Device.objects.prefetch_related("interfaces__ip_addresses").get(pk=pk)
         context = {
             "object": device,
+            "tab": self.tab,
         }
 
         # Get QIP client
@@ -144,6 +145,7 @@ class VMVitalQIPView(generic.ObjectView):
         vm = VirtualMachine.objects.prefetch_related("interfaces__ip_addresses").get(pk=pk)
         context = {
             "object": vm,
+            "tab": self.tab,
             "is_vm": True,
         }
 
