@@ -7,7 +7,7 @@ Shows IP address assignments from VitalQIP and allows importing addresses from Q
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 class VitalQIPConfig(PluginConfig):

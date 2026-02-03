@@ -8,7 +8,11 @@ import logging
 
 from dcim.models import Device
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
+from django.views import View
 from ipam.models import IPAddress, Prefix
 from netbox.views import generic
 from tenancy.models import Tenant
@@ -71,7 +75,7 @@ def get_vm_ips(vm):
 
 @register_model_view(Device, name="vitalqip", path="vitalqip")
 class DeviceVitalQIPView(generic.ObjectView):
-    """Display VitalQIP IPAM data for a device."""
+    """Display VitalQIP IPAM data for a device with async loading."""
 
     queryset = Device.objects.all()
     template_name = "netbox_vitalqip/device_tab.html"
@@ -83,24 +87,53 @@ class DeviceVitalQIPView(generic.ObjectView):
     )
 
     def get(self, request, pk):
+        """Render initial tab with loading spinner - content loads via htmx."""
+        device = Device.objects.get(pk=pk)
+        return render(
+            request,
+            self.template_name,
+            {
+                "object": device,
+                "tab": self.tab,
+                "loading": True,
+            },
+        )
+
+
+class DeviceVitalQIPContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """HTMX endpoint that returns VitalQIP content for async loading."""
+
+    permission_required = "dcim.view_device"
+
+    def get(self, request, pk):
+        """Fetch VitalQIP data and return HTML content."""
         device = Device.objects.prefetch_related("interfaces__ip_addresses").get(pk=pk)
-        context = {
-            "object": device,
-            "tab": self.tab,
-        }
+        context = {"object": device}
 
         # Get QIP client
         client = get_client()
         if not client:
             context["error"] = "VitalQIP not configured. Configure the plugin in NetBox settings."
-            return render(request, self.template_name, context)
+            return HttpResponse(
+                render_to_string(
+                    "netbox_vitalqip/device_tab_content.html",
+                    context,
+                    request=request,
+                )
+            )
 
         # Get device IPs
         device_ips = get_device_ips(device)
         if not device_ips:
             context["no_ips"] = True
             context["message"] = "No IP addresses assigned to this device."
-            return render(request, self.template_name, context)
+            return HttpResponse(
+                render_to_string(
+                    "netbox_vitalqip/device_tab_content.html",
+                    context,
+                    request=request,
+                )
+            )
 
         # Search for each IP in VitalQIP (limit to first 5 to avoid slow loads)
         qip_addresses = []
@@ -125,15 +158,21 @@ class DeviceVitalQIPView(generic.ObjectView):
             }
         )
 
-        return render(request, self.template_name, context)
+        return HttpResponse(
+            render_to_string(
+                "netbox_vitalqip/device_tab_content.html",
+                context,
+                request=request,
+            )
+        )
 
 
 @register_model_view(VirtualMachine, name="vitalqip", path="vitalqip")
 class VMVitalQIPView(generic.ObjectView):
-    """Display VitalQIP IPAM data for a virtual machine."""
+    """Display VitalQIP IPAM data for a virtual machine with async loading."""
 
     queryset = VirtualMachine.objects.all()
-    template_name = "netbox_vitalqip/device_tab.html"
+    template_name = "netbox_vitalqip/vm_tab.html"
     tab = ViewTab(
         label="VitalQIP",
         weight=9200,
@@ -142,25 +181,54 @@ class VMVitalQIPView(generic.ObjectView):
     )
 
     def get(self, request, pk):
+        """Render initial tab with loading spinner - content loads via htmx."""
+        vm = VirtualMachine.objects.get(pk=pk)
+        return render(
+            request,
+            self.template_name,
+            {
+                "object": vm,
+                "tab": self.tab,
+                "is_vm": True,
+                "loading": True,
+            },
+        )
+
+
+class VMVitalQIPContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """HTMX endpoint that returns VitalQIP content for VMs."""
+
+    permission_required = "virtualization.view_virtualmachine"
+
+    def get(self, request, pk):
+        """Fetch VitalQIP data and return HTML content."""
         vm = VirtualMachine.objects.prefetch_related("interfaces__ip_addresses").get(pk=pk)
-        context = {
-            "object": vm,
-            "tab": self.tab,
-            "is_vm": True,
-        }
+        context = {"object": vm, "is_vm": True}
 
         # Get QIP client
         client = get_client()
         if not client:
             context["error"] = "VitalQIP not configured. Configure the plugin in NetBox settings."
-            return render(request, self.template_name, context)
+            return HttpResponse(
+                render_to_string(
+                    "netbox_vitalqip/device_tab_content.html",
+                    context,
+                    request=request,
+                )
+            )
 
         # Get VM IPs
         vm_ips = get_vm_ips(vm)
         if not vm_ips:
             context["no_ips"] = True
             context["message"] = "No IP addresses assigned to this VM."
-            return render(request, self.template_name, context)
+            return HttpResponse(
+                render_to_string(
+                    "netbox_vitalqip/device_tab_content.html",
+                    context,
+                    request=request,
+                )
+            )
 
         # Search for each IP in VitalQIP (limit to first 5 to avoid slow loads)
         qip_addresses = []
@@ -185,7 +253,13 @@ class VMVitalQIPView(generic.ObjectView):
             }
         )
 
-        return render(request, self.template_name, context)
+        return HttpResponse(
+            render_to_string(
+                "netbox_vitalqip/device_tab_content.html",
+                context,
+                request=request,
+            )
+        )
 
 
 class QIPSettingsView(generic.ObjectView):

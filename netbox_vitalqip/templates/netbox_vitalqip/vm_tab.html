@@ -1,4 +1,4 @@
-{% extends 'dcim/device/base.html' %}
+{% extends 'virtualization/virtualmachine/base.html' %}
 {% load helpers %}
 
 {% block content %}
@@ -7,7 +7,7 @@
         {% if loading %}
         <!-- Loading state - htmx will fetch content -->
         <div id="vitalqip-content"
-             hx-get="{% url 'plugins:netbox_vitalqip:device_content' pk=object.pk %}"
+             hx-get="{% url 'plugins:netbox_vitalqip:vm_content' pk=object.pk %}"
              hx-trigger="load"
              hx-swap="innerHTML">
             <div class="d-flex justify-content-center align-items-center py-5">
@@ -16,7 +16,7 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <p class="text-muted mb-0">Loading VitalQIP data...</p>
-                    <p class="text-muted small">Querying IPAM for device IP addresses</p>
+                    <p class="text-muted small">Querying IPAM for VM IP addresses</p>
                 </div>
             </div>
         </div>
