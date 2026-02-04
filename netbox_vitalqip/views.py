@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # Check if netbox_endpoints plugin is installed
 try:
     from netbox_endpoints.models import Endpoint
+
     ENDPOINTS_PLUGIN_INSTALLED = True
 except ImportError:
     ENDPOINTS_PLUGIN_INSTALLED = False
@@ -340,10 +341,11 @@ class PrefixImportView(generic.ObjectView):
 def is_valid_ip(ip_str):
     """Check if string is a valid IPv4 address."""
     import re
-    pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+
+    pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
     if not re.match(pattern, ip_str):
         return False
-    parts = ip_str.split('.')
+    parts = ip_str.split(".")
     return all(0 <= int(part) <= 255 for part in parts)
 
 
@@ -516,11 +518,13 @@ class PrefixImportPreviewView(generic.ObjectView):
                 )
                 new_ip.save()
 
-                return JsonResponse({
-                    "success": True,
-                    "created": 1,
-                    "message": f"Imported IP {ip_address} with DNS name '{dns_name}'",
-                })
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "created": 1,
+                        "message": f"Imported IP {ip_address} with DNS name '{dns_name}'",
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Error importing IP {ip_address} from VitalQIP: {e}")

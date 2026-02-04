@@ -5,8 +5,8 @@ URL routing for NetBox VitalQIP plugin.
 from django.urls import path
 
 from .views import (
-    DeviceVitalQIPContentView,
     ENDPOINTS_PLUGIN_INSTALLED,
+    DeviceVitalQIPContentView,
     PrefixImportPreviewView,
     PrefixImportView,
     QIPSettingsView,
