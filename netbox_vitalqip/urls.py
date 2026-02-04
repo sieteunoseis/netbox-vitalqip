@@ -6,6 +6,7 @@ from django.urls import path
 
 from .views import (
     DeviceVitalQIPContentView,
+    ENDPOINTS_PLUGIN_INSTALLED,
     PrefixImportPreviewView,
     PrefixImportView,
     QIPSettingsView,
@@ -21,3 +22,11 @@ urlpatterns = [
     path("device/<int:pk>/content/", DeviceVitalQIPContentView.as_view(), name="device_content"),
     path("vm/<int:pk>/content/", VMVitalQIPContentView.as_view(), name="vm_content"),
 ]
+
+# Add endpoint URLs if netbox_endpoints is installed
+if ENDPOINTS_PLUGIN_INSTALLED:
+    from .views import EndpointVitalQIPContentView
+
+    urlpatterns.append(
+        path("endpoint/<int:pk>/content/", EndpointVitalQIPContentView.as_view(), name="endpoint_content"),
+    )

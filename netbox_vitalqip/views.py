@@ -24,6 +24,13 @@ from .qip_client import get_client
 
 logger = logging.getLogger(__name__)
 
+# Check if netbox_endpoints plugin is installed
+try:
+    from netbox_endpoints.models import Endpoint
+    ENDPOINTS_PLUGIN_INSTALLED = True
+except ImportError:
+    ENDPOINTS_PLUGIN_INSTALLED = False
+
 
 def get_device_ips(device):
     """
@@ -568,3 +575,103 @@ class PrefixImportPreviewView(generic.ObjectView):
             result["message"] += f" ({len(errors)} errors)"
 
         return JsonResponse(result)
+
+
+# Endpoint-specific functions for netbox_endpoints plugin
+def get_endpoint_ips(endpoint):
+    """
+    Get all IP addresses associated with an endpoint.
+
+    Returns list of IP address strings.
+    """
+    ips = []
+
+    # Primary IPs from the endpoint
+    if endpoint.primary_ip4:
+        ips.append(str(endpoint.primary_ip4.address.ip))
+    if endpoint.primary_ip6:
+        ips.append(str(endpoint.primary_ip6.address.ip))
+
+    return ips
+
+
+def should_show_vitalqip_tab_endpoint(endpoint):
+    """
+    Determine if the VitalQIP tab should be visible for this endpoint.
+
+    Shows tab if endpoint has any IP addresses assigned.
+    """
+    if not ENDPOINTS_PLUGIN_INSTALLED:
+        return False
+
+    return endpoint.primary_ip4 is not None or endpoint.primary_ip6 is not None
+
+
+# Endpoint views - only available if netbox_endpoints is installed
+if ENDPOINTS_PLUGIN_INSTALLED:
+
+    class EndpointVitalQIPContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
+        """HTMX endpoint that returns VitalQIP content for Endpoint async loading."""
+
+        permission_required = "netbox_endpoints.view_endpoint"
+
+        def get(self, request, pk):
+            """Fetch VitalQIP data and return HTML content."""
+            endpoint = Endpoint.objects.get(pk=pk)
+            context = {"object": endpoint}
+
+            # Get QIP client
+            client = get_client()
+            if not client:
+                context["error"] = "VitalQIP not configured. Configure the plugin in NetBox settings."
+                return HttpResponse(
+                    render_to_string(
+                        "netbox_vitalqip/device_tab_content.html",
+                        context,
+                        request=request,
+                    )
+                )
+
+            # Get endpoint IPs
+            endpoint_ips = get_endpoint_ips(endpoint)
+            if not endpoint_ips:
+                context["no_ips"] = True
+                context["message"] = "No IP addresses assigned to this endpoint."
+                return HttpResponse(
+                    render_to_string(
+                        "netbox_vitalqip/device_tab_content.html",
+                        context,
+                        request=request,
+                    )
+                )
+
+            # Search for each IP in VitalQIP
+            qip_addresses = []
+            for ip in endpoint_ips:
+                qip_data = client.search_address(ip)
+                if qip_data:
+                    qip_addresses.append(
+                        {
+                            "netbox_ip": ip,
+                            "qip_data": qip_data,
+                            "cached": qip_data.get("cached", False),
+                        }
+                    )
+
+            context.update(
+                {
+                    "device_ips": endpoint_ips,
+                    "qip_addresses": qip_addresses,
+                    "found_count": len(qip_addresses),
+                    "total_count": len(endpoint_ips),
+                    "truncated": False,
+                }
+            )
+
+            return HttpResponse(
+                render_to_string(
+                    "netbox_vitalqip/device_tab_content.html",
+                    context,
+                    request=request,
+                )
+            )
