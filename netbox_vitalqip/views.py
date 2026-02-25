@@ -89,7 +89,7 @@ class DeviceVitalQIPView(generic.ObjectView):
     template_name = "netbox_vitalqip/device_tab.html"
     tab = ViewTab(
         label="VitalQIP",
-        weight=9200,
+        weight=9007,
         permission="dcim.view_device",
         hide_if_empty=False,
     )
@@ -183,7 +183,7 @@ class VMVitalQIPView(generic.ObjectView):
     template_name = "netbox_vitalqip/vm_tab.html"
     tab = ViewTab(
         label="VitalQIP",
-        weight=9200,
+        weight=9007,
         permission="virtualization.view_virtualmachine",
         hide_if_empty=False,
     )

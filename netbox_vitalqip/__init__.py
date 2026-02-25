@@ -9,7 +9,7 @@ import logging
 
 from netbox.plugins import PluginConfig
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ class VitalQIPConfig(PluginConfig):
     """Plugin configuration for NetBox VitalQIP integration."""
 
     name = "netbox_vitalqip"
-    verbose_name = "VitalQIP IPAM"
+    verbose_name = "NetBox VitalQIP"
     description = "Display VitalQIP IPAM data and import IP addresses"
     version = __version__
-    author = "sieteunoseis"
+    author = "Jeremy Worden"
     author_email = "jeremy.worden@gmail.com"
     base_url = "vitalqip"
     min_version = "4.0.0"
@@ -78,7 +78,7 @@ class VitalQIPConfig(PluginConfig):
 
                 tab = ViewTab(
                     label="VitalQIP",
-                    weight=9200,
+                    weight=9007,
                     permission="netbox_endpoints.view_endpoint",
                     hide_if_empty=False,
                     visible=should_show_vitalqip_tab_endpoint,
