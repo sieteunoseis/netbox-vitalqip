@@ -270,10 +270,10 @@ class VMVitalQIPContentView(LoginRequiredMixin, PermissionRequiredMixin, View):
         )
 
 
-class QIPSettingsView(generic.ObjectView):
+class QIPSettingsView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """Display VitalQIP plugin settings."""
 
-    queryset = Device.objects.none()
+    permission_required = "netbox_vitalqip.configure_vitalqip"
     template_name = "netbox_vitalqip/settings.html"
 
     def get(self, request):

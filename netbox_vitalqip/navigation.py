@@ -23,7 +23,7 @@ menu = PluginMenu(
                 PluginMenuItem(
                     link="plugins:netbox_vitalqip:settings",
                     link_text="Configuration",
-                    permissions=["dcim.view_device"],
+                    permissions=["netbox_vitalqip.configure_vitalqip"],
                 ),
             ),
         ),
